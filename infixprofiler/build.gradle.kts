@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
+    `maven-publish`
 }
 
 android {
@@ -30,6 +31,11 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
+
+    // ✅ Required for publishing the release variant
+    publishing {
+        singleVariant("release")
+    }
 }
 
 dependencies {
@@ -53,4 +59,21 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
 
 
+}
+
+
+
+// ✅ Publishing block for JitPack
+publishing {
+    publications {
+        create<MavenPublication>("release") {
+            groupId = "com.github.auvgffle"
+            artifactId = "InfixProfiler"
+            version = "v1.0.1"
+
+            afterEvaluate {
+                from(components["release"])
+            }
+        }
+    }
 }

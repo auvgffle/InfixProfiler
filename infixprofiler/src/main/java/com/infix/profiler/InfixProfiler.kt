@@ -2,9 +2,12 @@ package com.infix.profiler
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.infix.profiler.manager.DeviceInfoManager
 import com.infix.profiler.manager.NetworkInfoManager
 import com.infix.profiler.manager.LocationManager
@@ -24,6 +27,8 @@ import kotlinx.coroutines.delay
 import java.net.URL
 import java.net.HttpURLConnection
 import org.json.JSONObject
+import android.Manifest
+import android.app.Activity
 
 /**
  * InfixProfiler SDK
@@ -93,9 +98,72 @@ object InfixProfiler : CoroutineScope {
         this.appId = appId
         this.contact = contact
         this.options = options
+
+        if (options.enableLocation) {
+            try {
+                if (appContext is Activity) {
+                    requestLocationPermission(appContext)
+                } else {
+                    Log.w("InfixProfiler", "Location permission not requested: context is not an Activity")
+                }
+            } catch (e: Exception) {
+                Log.e("InfixProfiler", "Failed to request location permission: ${e.message}", e)
+            }
+        }
+
         initialized = true
         startPeriodicDataCollection()
     }
+
+
+    //    Location permissions
+    private fun requestLocationPermission(activity: Activity) {
+        val permissionsNeeded = arrayOf(
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        )
+
+        val shouldRequest = permissionsNeeded.any {
+            ContextCompat.checkSelfPermission(activity, it) != PackageManager.PERMISSION_GRANTED
+        }
+
+        if (shouldRequest) {
+            ActivityCompat.requestPermissions(activity, permissionsNeeded, 1001)
+            Log.d("InfixProfiler", "Location permission requested")
+        } else {
+            Log.d("InfixProfiler", "Location permission already granted")
+        }
+    }
+
+
+    fun requestLocationPermissionIfNeeded(activity: Activity) {
+        try {
+            if (!options.enableLocation) {
+                Log.i("InfixProfiler", "Location collection is disabled in options")
+                return
+            }
+
+            val permissions = arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            )
+
+            val missing = permissions.filter {
+                ContextCompat.checkSelfPermission(activity, it) != PackageManager.PERMISSION_GRANTED
+            }
+
+            if (missing.isNotEmpty()) {
+                ActivityCompat.requestPermissions(activity, missing.toTypedArray(), 1001)
+                Log.d("InfixProfiler", "Requested location permission manually")
+            } else {
+                Log.d("InfixProfiler", "Location permission already granted")
+            }
+
+        } catch (e: Exception) {
+            Log.e("InfixProfiler", "Error while requesting location permission: ${e.message}", e)
+        }
+    }
+
 
     private fun startPeriodicDataCollection() {
         periodicJob = launch {
@@ -313,6 +381,6 @@ object InfixProfiler : CoroutineScope {
         "androidId" to androidId,
         "hasNotch" to hasNotch,
         "hasDynamicIsland" to hasDynamicIsland
-        // Add more fields as needed
+
     )
 }

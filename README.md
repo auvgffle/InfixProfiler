@@ -98,8 +98,7 @@ InfixProfiler.stop()
 
 If you need assistance integrating this SDK, feel free to reach out:
 
-- 📧 Email: infixsdk@gmail.com
-- 🌐 Website: https://sdk.intelvis.org
+- 📧 Email: auvgffle@gmail.com
 
 ---
 

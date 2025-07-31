@@ -34,7 +34,7 @@ dependencyResolutionManagement {
 
 ```groovy
 dependencies {
-    implementation 'com.github.auvgffle:InfixProfiler:v1.0.2'
+    implementation 'com.github.auvgffle:InfixProfiler:v1.0.3'
 }
 ```
 
